@@ -86,6 +86,33 @@
 
         loop();
     </script>
+
+    let playerScore = 0;
+let aiScore = 0;
+
+function drawScore() {
+    document.getElementById("score").innerText = `Player: ${playerScore} | AI: ${aiScore}`;
+}
+
+// Whenever the ball goes past a paddle:
+if(ball.x < 0){
+    aiScore++;
+    resetBall();
+}
+if(ball.x > canvas.width){
+    playerScore++;
+    resetBall();
+}
+
+// Call drawScore() inside your game loop:
+function gameLoop() {
+    update(); 
+    draw();
+    drawScore(); // update scores
+    requestAnimationFrame(gameLoop);
+}
+
 </body>
 </html>
+
 
