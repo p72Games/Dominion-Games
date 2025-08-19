@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong</title>
+    <style>
+        canvas { background: black; display: block; margin: 20px auto; }
+        h1 { text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Pong</h1>
+    <canvas id="pong" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("pong");
+        const ctx = canvas.getContext("2d");
+
+        const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
+        let player = { x: 0, y: canvas.height/2 - paddleHeight/2, dy: 0 };
+        let ai = { x: canvas.width - paddleWidth, y: canvas.height/2 - paddleHeight/2, dy: 2 };
+        let ball = { x: canvas.width/2, y: canvas.height/2, dx: 4, dy: 4 };
+
+        document.addEventListener("keydown", e => {
+            if(e.key === "ArrowUp") player.dy = -5;
+            if(e.key === "ArrowDown") player.dy = 5;
+        });
+        document.addEventListener("keyup", e => {
+            if(e.key === "ArrowUp" || e.key === "ArrowDown") player.dy = 0;
+        });
+
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        function drawCircle(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI*2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function resetBall() {
+            ball.x = canvas.width/2;
+            ball.y = canvas.height/2;
+            ball.dx = -ball.dx;
+        }
+
+        function update() {
+            player.y += player.dy;
+            if(player.y < 0) player.y = 0;
+            if(player.y + paddleHeight > canvas.height) player.y = canvas.height - paddleHeight;
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if(ball.y + ballSize > canvas.height || ball.y - ballSize < 0) ball.dy = -ball.dy;
+
+            if(ball.x - ballSize < player.x + paddleWidth && ball.y > player.y && ball.y < player.y + paddleHeight) ball.dx = -ball.dx;
+            if(ball.x + ballSize > ai.x && ball.y > ai.y && ball.y < ai.y + paddleHeight) ball.dx = -ball.dx;
+
+            if(ball.y < ai.y + paddleHeight/2) ai.y -= ai.dy;
+            if(ball.y > ai.y + paddleHeight/2) ai.y += ai.dy;
+            if(ai.y < 0) ai.y = 0;
+            if(ai.y + paddleHeight > canvas.height) ai.y = canvas.height - paddleHeight;
+
+            if(ball.x < 0 || ball.x > canvas.width) resetBall();
+        }
+
+        function draw() {
+            drawRect(0, 0, canvas.width, canvas.height, "black");
+            drawRect(player.x, player.y, paddleWidth, paddleHeight, "white");
+            drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "white");
+            drawCircle(ball.x, ball.y, ballSize, "white");
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
