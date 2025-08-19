@@ -3,169 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chess - Dominion Games</title>
-<link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+<title>Chess</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
 <style>
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background: #f0f0f0; }
-#gameContainer { display: flex; flex-direction: column; align-items: center; padding: 20px; }
-#board { margin: 20px; }
-#controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
-button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-#status { margin: 10px; font-weight: bold; }
-#moveHistory { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #fff; padding: 5px; width: 200px; margin: 10px auto; text-align: left; }
-#howToUse { background: #fff; padding: 10px; margin: 10px auto; border: 1px solid #ccc; width: 90%; max-width: 500px; text-align: left; }
+  body { font-family: "Georgia", serif; text-align: center; background: #f4f1ee; }
+  #board { width: 400px; margin: 20px auto; }
+  #message { font-size: 18px; color: #e74c3c; margin-top: 10px; min-height: 24px; }
+  #controls { margin-top: 20px; }
+  button { padding: 10px 20px; font-size: 16px; margin: 0 10px; cursor: pointer; }
+  select { padding: 5px; font-size: 16px; }
+  a { display: inline-block; margin-top: 20px; color: #2980b9; text-decoration: none; }
 </style>
 </head>
 <body>
-<div id="gameContainer">
+
 <h1>Chess</h1>
-<div id="howToUse">
-<h3>How to Use</h3>
-<ul>
-<li>Choose Single Player or Two Player mode.</li>
-<li>Select AI difficulty if in Single Player.</li>
-<li>Click pieces to move them. Illegal moves will show a message in the status area.</li>
-<li>Use Undo/Redo buttons to correct mistakes.</li>
-<li>View your move history on the right.</li>
-<li>Check the timer if enabled.</li>
-<li>Leaderboard shows your wins against AI.</li>
-</ul>
-</div>
+<div id="board"></div>
+<div id="message"></div>
+
 <div id="controls">
-<select id="modeSelect">
-<option value="single">Single Player</option>
-<option value="two">Two Player</option>
-</select>
-<select id="difficultySelect">
-<option value="easy">Easy</option>
-<option value="medium">Medium</option>
-<option value="hard">Hard</option>
-</select>
-<button id="undoBtn">Undo</button>
-<button id="redoBtn">Redo</button>
-<button id="resetBtn">Restart</button>
-</div>
-<div id="board" style="width: 400px"></div>
-<div id="status">Welcome to Chess!</div>
-<div id="moveHistory"></div>
+  <label for="difficulty">AI Difficulty:</label>
+  <select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+  <button onclick="restartGame()">Restart</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
-<script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<a href="index.html">Back to Hub</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 <script>
-const boardContainer = document.getElementById('board');
-const statusDiv = document.getElementById('status');
-const moveHistoryDiv = document.getElementById('moveHistory');
-const modeSelect = document.getElementById('modeSelect');
-const difficultySelect = document.getElementById('difficultySelect');
-const undoBtn = document.getElementById('undoBtn');
-const redoBtn = document.getElementById('redoBtn');
-const resetBtn = document.getElementById('resetBtn');
-
+let board = null;
 let game = new Chess();
-let board;
-let history = [];
-let redoStack = [];
+let messageEl = document.getElementById("message");
 
-const aiLevels = { easy: 0, medium: 1, hard: 2 };
-let aiLevel = aiLevels.easy;
-
-function updateStatus(msg) {
-    statusDiv.textContent = msg;
+function onDragStart(source, piece, position, orientation) {
+    if (game.game_over() ||
+        (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+        (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+        return false;
+    }
 }
 
-function updateMoveHistory() {
-    moveHistoryDiv.innerHTML = game.history({ verbose: true }).map((m, i) => `${i+1}. ${m.san}`).join('<br>');
+function onDrop(source, target) {
+    let move = game.move({ from: source, to: target, promotion: 'q' });
+    if (move === null) {
+        messageEl.textContent = "Illegal move! Try again.";
+        return 'snapback';
+    } else {
+        messageEl.textContent = "";
+        window.setTimeout(makeAIMove, 200);
+    }
 }
 
 function makeAIMove() {
     if (game.game_over()) return;
     let moves = game.moves();
-    if (!moves.length) return;
+    let difficulty = document.getElementById("difficulty").value;
+    let move = null;
 
-    let move;
-    if (aiLevel === 0) {
+    if (difficulty === "easy") {
         move = moves[Math.floor(Math.random() * moves.length)];
-    } else {
-        move = moves[Math.floor(Math.random() * moves.length)]; // placeholder for smarter AI
+    } else if (difficulty === "medium") {
+        move = moves[Math.floor(Math.random() * moves.length)]; // placeholder, can use mini-max
+    } else if (difficulty === "hard") {
+        move = moves[Math.floor(Math.random() * moves.length)]; // placeholder, advanced AI can go here
     }
 
     game.move(move);
     board.position(game.fen());
-    updateMoveHistory();
-
-    if (game.game_over()) updateStatus('Game over!');
 }
 
-function onDrop(source, target) {
-    let move = game.move({ from: source, to: target, promotion: 'q' });
+function onSnapEnd() {
+    board.position(game.fen());
+}
 
-    if (move === null) {
-        updateStatus('Illegal move!');
-        return 'snapback';
-    } else {
-        updateStatus('');
-        history.push(move);
-        redoStack = [];
-        updateMoveHistory();
-
-        if (game.game_over()) {
-            updateStatus('Game over!');
-        } else if (modeSelect.value === 'single' && game.turn() === 'b') {
-            setTimeout(makeAIMove, 500);
-        }
-    }
+function restartGame() {
+    game.reset();
+    board.start();
+    messageEl.textContent = "";
 }
 
 board = Chessboard('board', {
     draggable: true,
     position: 'start',
-    onDrop: onDrop
-});
-
-undoBtn.addEventListener('click', () => {
-    if (history.length === 0) return;
-    let lastMove = history.pop();
-    redoStack.push(lastMove);
-    game.undo();
-    if (modeSelect.value === 'single' && game.turn() === 'b') game.undo();
-    board.position(game.fen());
-    updateMoveHistory();
-    updateStatus('Move undone');
-});
-
-redoBtn.addEventListener('click', () => {
-    if (redoStack.length === 0) return;
-    let move = redoStack.pop();
-    game.move(move);
-    if (modeSelect.value === 'single' && game.turn() === 'b') makeAIMove();
-    board.position(game.fen());
-    history.push(move);
-    updateMoveHistory();
-    updateStatus('Move redone');
-});
-
-resetBtn.addEventListener('click', () => {
-    game.reset();
-    board.start();
-    history = [];
-    redoStack = [];
-    updateMoveHistory();
-    updateStatus('Game restarted');
-});
-
-modeSelect.addEventListener('change', () => {
-    game.reset();
-    board.start();
-    history = [];
-    redoStack = [];
-    updateMoveHistory();
-    updateStatus('Mode changed');
-});
-
-difficultySelect.addEventListener('change', () => {
-    aiLevel = aiLevels[difficultySelect.value];
-    updateStatus('Difficulty set to ' + difficultySelect.value);
+    onDragStart: onDragStart,
+    onDrop: onDrop,
+    onSnapEnd: onSnapEnd
 });
 </script>
 </body>
