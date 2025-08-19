@@ -1,65 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dominion Games Hub</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-
-        h1 {
-            background-color: #333;
-            color: white;
-            padding: 20px 0;
-            margin: 0;
-        }
-
-        .game-list {
-            margin: 50px auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 300px;
-        }
-
-        .game-list a {
-            text-decoration: none;
-            padding: 15px 25px;
-            background-color: #333;
-            color: white;
-            border-radius: 10px;
-            font-size: 18px;
-            transition: background-color 0.3s;
-        }
-
-        .game-list a:hover {
-            background-color: #555;
-        }
-
-        footer {
-            margin-top: 50px;
-            font-size: 14px;
-            color: #666;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dominion Games</title>
+<style>
+    body {
+        margin: 0;
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(to right, #1e3c72, #2a5298);
+        color: #fff;
+        text-align: center;
+    }
+    h1 {
+        margin-top: 40px;
+        font-size: 3em;
+        text-shadow: 2px 2px 5px #000;
+    }
+    .game-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 50px 0;
+        gap: 30px;
+    }
+    .game-card {
+        background: rgba(0,0,0,0.6);
+        border-radius: 15px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        width: 250px;
+        padding: 30px;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .game-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 25px rgba(0,0,0,0.7);
+    }
+    .game-card h2 {
+        margin-bottom: 20px;
+        font-size: 1.8em;
+        color: #ffcc00;
+    }
+    .game-card a {
+        display: inline-block;
+        padding: 12px 25px;
+        font-size: 18px;
+        color: #fff;
+        background: #ff5722;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: background 0.3s;
+    }
+    .game-card a:hover {
+        background: #e64a19;
+    }
+    footer {
+        margin: 50px 0 20px 0;
+        font-size: 14px;
+        opacity: 0.8;
+    }
+</style>
 </head>
 <body>
-    <h1>Dominion Games Hub</h1>
 
-    <div class="game-list">
-        <a href="pong_game.html">Play Pong</a>
-        <a href="tictactoe_game.html">Play Tic Tac Toe</a>
-        <a href="snake.html">Play Snake</a>
+<h1>Dominion Games</h1>
+
+<div class="game-container">
+    <div class="game-card">
+        <h2>Pong</h2>
+        <a href="pong_game.html">Play Now</a>
     </div>
+    <div class="game-card">
+        <h2>Tic Tac Toe</h2>
+        <a href="tictactoe_game.html">Play Now</a>
+    </div>
+    <div class="game-card">
+        <h2>Snake</h2>
+        <a href="snake_game.html">Play Now</a>
+    </div>
+</div>
 
-    <footer>
-        &copy; 2025 Dominion Games
-    </footer>
+<footer>
+    &copy; 2025 Dominion Games
+</footer>
+
 </body>
 </html>
