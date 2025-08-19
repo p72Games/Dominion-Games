@@ -3,41 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pong</title>
+    <title>Pong - Dominion Games</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #222; color: #fff; }
-        canvas { background: black; display: block; margin: 20px auto; border: 2px solid #fff; }
-        #scoreDisplay { font-size: 20px; margin-top: 10px; }
-        button { font-size: 16px; padding: 10px 20px; margin-top: 10px; cursor: pointer; }
-        input { padding: 5px; font-size: 16px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1d1f27, #3a3c4b);
+            color: #fff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        h1 { margin-top: 20px; color: #ffd700; }
+
+        canvas {
+            background: black;
+            display: block;
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        #score {
+            font-size: 24px;
+            margin: 10px;
+        }
+
+        #leaderboard {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #leaderboard h2 { color: #ffd700; }
+        #leaderboard ul { list-style: none; padding: 0; }
+        #leaderboard li { margin: 5px 0; }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #ffd700;
+            color: #222;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #e6c200;
+        }
     </style>
 </head>
 <body>
-    <div id="startScreen">
-        <h1>Pong</h1>
-        <label for="playerName">Enter your name:</label>
-        <input type="text" id="playerName" placeholder="Your name">
-        <button onclick="startGame()">Start Game</button>
+    <h1>Pong</h1>
+    <div id="score">Score: 0</div>
+    <canvas id="pong" width="600" height="400"></canvas>
+
+    <div id="leaderboard">
+        <h2>Leaderboard</h2>
+        <ul id="scoresList"></ul>
     </div>
 
-    <div id="gameScreen" style="display:none;">
-        <canvas id="pong" width="600" height="400"></canvas>
-        <div id="scoreDisplay">Score: 0</div>
-        <button id="submitScoreBtn" style="display:none;" onclick="submitScore()">Submit Score</button>
-    </div>
+    <button id="homeBtn">Home</button>
 
     <script>
         const canvas = document.getElementById("pong");
         const ctx = canvas.getContext("2d");
 
+        // Paddle and ball
         const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
         let player = { x: 0, y: canvas.height/2 - paddleHeight/2, dy: 0 };
         let ai = { x: canvas.width - paddleWidth, y: canvas.height/2 - paddleHeight/2, dy: 2 };
         let ball = { x: canvas.width/2, y: canvas.height/2, dx: 4, dy: 4 };
-
-        let playerName = "";
         let score = 0;
-        let gameLoopId;
+
+        const scoreDisplay = document.getElementById("score");
 
         document.addEventListener("keydown", e => {
             if(e.key === "ArrowUp") player.dy = -5;
@@ -63,38 +104,46 @@
         function resetBall() {
             ball.x = canvas.width/2;
             ball.y = canvas.height/2;
-            ball.dx = 4 * (Math.random() < 0.5 ? 1 : -1);
-            ball.dy = 4 * (Math.random() < 0.5 ? 1 : -1);
+            ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = 4 * (Math.random() > 0.5 ? 1 : -1);
         }
 
         function update() {
+            // Move player paddle
             player.y += player.dy;
             if(player.y < 0) player.y = 0;
             if(player.y + paddleHeight > canvas.height) player.y = canvas.height - paddleHeight;
 
-            // simple AI
-            if(ball.y < ai.y + paddleHeight/2) ai.y -= ai.dy;
-            if(ball.y > ai.y + paddleHeight/2) ai.y += ai.dy;
+            // Move AI paddle
+            if(ai.y + paddleHeight/2 < ball.y) ai.y += ai.dy;
+            else ai.y -= ai.dy;
             if(ai.y < 0) ai.y = 0;
             if(ai.y + paddleHeight > canvas.height) ai.y = canvas.height - paddleHeight;
 
-            // ball movement
+            // Move ball
             ball.x += ball.dx;
             ball.y += ball.dy;
 
-            // collisions
-            if(ball.y < 0 || ball.y > canvas.height) ball.dy *= -1;
+            // Ball collision top/bottom
+            if(ball.y < 0 || ball.y > canvas.height - ballSize) ball.dy *= -1;
 
-            if(ball.x < player.x + paddleWidth && ball.x > player.x && ball.y > player.y && ball.y < player.y + paddleHeight) ball.dx *= -1;
-            if(ball.x + ballSize > ai.x && ball.x + ballSize < ai.x + paddleWidth && ball.y > ai.y && ball.y < ai.y + paddleHeight) ball.dx *= -1;
-
-            // scoring
-            if(ball.x < 0) {
-                endGame(); // AI scores, player loses
-            } 
-            if(ball.x > canvas.width) {
+            // Ball collision paddles
+            if(ball.x < player.x + paddleWidth && ball.x > player.x && ball.y + ballSize > player.y && ball.y < player.y + paddleHeight) {
+                ball.dx *= -1;
                 score++;
-                document.getElementById("scoreDisplay").innerText = "Score: " + score;
+                scoreDisplay.innerText = `Score: ${score}`;
+            }
+
+            if(ball.x + ballSize > ai.x && ball.x + ballSize < ai.x + paddleWidth && ball.y + ballSize > ai.y && ball.y < ai.y + paddleHeight) {
+                ball.dx *= -1;
+            }
+
+            // Missed ball
+            if(ball.x < 0 || ball.x > canvas.width) {
+                const name = prompt("Game Over! Enter your name for leaderboard:", "Player");
+                if(name) addToLeaderboard(name, score);
+                score = 0;
+                scoreDisplay.innerText = `Score: 0`;
                 resetBall();
             }
         }
@@ -109,33 +158,35 @@
         function gameLoop() {
             update();
             draw();
-            gameLoopId = requestAnimationFrame(gameLoop);
+            requestAnimationFrame(gameLoop);
         }
 
-        function startGame() {
-            playerName = document.getElementById("playerName").value || "Player";
-            score = 0;
-            document.getElementById("scoreDisplay").innerText = "Score: " + score;
-            document.getElementById("startScreen").style.display = "none";
-            document.getElementById("gameScreen").style.display = "block";
-            document.getElementById("submitScoreBtn").style.display = "none";
-            resetBall();
-            gameLoop();
-        }
+        gameLoop();
 
-        function endGame() {
-            cancelAnimationFrame(gameLoopId);
-            alert("Game Over! Your score: " + score);
-            document.getElementById("submitScoreBtn").style.display = "inline-block";
-        }
+        // Leaderboard
+        let leaderboard = [];
+        const scoresList = document.getElementById("scoresList");
 
-        function submitScore() {
-            let leaderboard = JSON.parse(localStorage.getItem("pongLeaderboard") || "[]");
-            leaderboard.push({ name: playerName, score: score });
+        function addToLeaderboard(name, score) {
+            leaderboard.push({name, score});
             leaderboard.sort((a,b) => b.score - a.score);
-            localStorage.setItem("pongLeaderboard", JSON.stringify(leaderboard));
-            displayLeaderboard();
+            if(leaderboard.length > 5) leaderboard.pop();
+            renderLeaderboard();
         }
 
-        function displayLeaderboard() {
-            let leaderboard = JSON.parse(localStorage.getItem("pongLeaderbo
+        function renderLeaderboard() {
+            scoresList.innerHTML = "";
+            leaderboard.forEach(entry => {
+                const li = document.createElement("li");
+                li.textContent = `${entry.name} - ${entry.score}`;
+                scoresList.appendChild(li);
+            });
+        }
+
+        // Home button
+        document.getElementById("homeBtn").addEventListener("click", () => {
+            window.location.href = "index.html";
+        });
+    </script>
+</body>
+</html>
