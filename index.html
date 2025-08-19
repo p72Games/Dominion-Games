@@ -1,77 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dominion Games Hub</title>
-<style>
-  body {
-    margin: 0;
-    font-family: "Garamond", serif;
-    background: url('https://i.imgur.com/Uv9iL0R.jpg') no-repeat center center fixed;
-    background-size: cover;
-    color: #2b1d0e;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    text-shadow: 1px 1px 2px #fff8dc;
-  }
-  header {
-    text-align: center;
-    padding: 50px 20px 20px 20px;
-  }
-  header h1 {
-    font-size: 3em;
-    color: #8b4513;
-    margin-bottom: 10px;
-  }
-  nav {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    margin-top: 50px;
-  }
-  nav a {
-    text-decoration: none;
-    color: #5a2e0c;
-    background: rgba(255, 248, 220, 0.8);
-    padding: 20px 40px;
-    border-radius: 15px;
-    font-size: 1.5em;
-    box-shadow: 3px 3px 6px #00000033;
-    transition: all 0.3s ease;
-  }
-  nav a:hover {
-    background: rgba(255, 239, 184, 0.95);
-    transform: scale(1.05);
-    box-shadow: 5px 5px 10px #00000055;
-  }
-  footer {
-    margin-top: auto;
-    padding: 20px;
-    text-align: center;
-    font-size: 0.9em;
-    background: rgba(255, 248, 220, 0.8);
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominion Games Hub</title>
+    <style>
+        body {
+            font-family: "Georgia", serif;
+            background-color: #f4f1ee;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 0;
+            font-size: 2em;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 40px 0;
+        }
+        .game-card {
+            background-color: #fff;
+            border: 2px solid #ccc;
+            border-radius: 12px;
+            width: 200px;
+            margin: 20px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 6px 6px 15px rgba(0,0,0,0.2);
+        }
+        .game-card img {
+            width: 100%;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .game-card h2 {
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+        footer {
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        a {
+            text-decoration: none;
+            color: #2980b9;
+        }
+        a:hover {
+            color: #e74c3c;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <h1>Dominion Games</h1>
-  <p>Step into the arena of classic and modern games, inspired by historic Geneva elegance.</p>
-</header>
+<header>Dominion Games Hub</header>
 
-<nav>
-  <a href="pong_game.html">Pong</a>
-  <a href="snake_game.html">Snake</a>
-  <a href="tictactoe_game.html">Tic Tac Toe</a>
-  <a href="chess_game.html">Chess</a>
-</nav>
+<main>
+    <div class="game-card" onclick="location.href='pong_game.html'">
+        <img src="images/pong.png" alt="Pong">
+        <h2>Pong</h2>
+    </div>
+    <div class="game-card" onclick="location.href='snake_game.html'">
+        <img src="images/snake.png" alt="Snake">
+        <h2>Snake</h2>
+    </div>
+    <div class="game-card" onclick="location.href='tictactoe_game.html'">
+        <img src="images/tictactoe.png" alt="Tic Tac Toe">
+        <h2>Tic Tac Toe</h2>
+    </div>
+    <div class="game-card" onclick="location.href='chess_game.html'">
+        <img src="images/chess.png" alt="Chess">
+        <h2>Chess</h2>
+    </div>
+</main>
 
 <footer>
-  &copy; 2025 Dominion Games. Crafted with a touch of history and fun.
+    <p>Dominion Games &copy; 2025 | <a href="mailto:contact@dominiongames.com">Contact</a></p>
 </footer>
 
 </body>
