@@ -7,11 +7,13 @@
     <style>
         canvas { background: black; display: block; margin: 20px auto; }
         h1 { text-align: center; }
+        a { display: block; text-align: center; margin-top: 20px; font-size: 18px; }
     </style>
 </head>
 <body>
     <h1>Pong</h1>
     <canvas id="pong" width="600" height="400"></canvas>
+    <a href="index.html">Back to Hub</a>
     <script>
         const canvas = document.getElementById("pong");
         const ctx = canvas.getContext("2d");
@@ -42,47 +44,48 @@
             ctx.fill();
         }
 
-        function resetBall() {
-            ball.x = canvas.width/2;
-            ball.y = canvas.height/2;
-            ball.dx = -ball.dx;
-        }
-
-        function update() {
+        function move() {
             player.y += player.dy;
             if(player.y < 0) player.y = 0;
             if(player.y + paddleHeight > canvas.height) player.y = canvas.height - paddleHeight;
 
+            ai.y += ai.dy;
+            if(ai.y < 0 || ai.y + paddleHeight > canvas.height) ai.dy *= -1;
+
             ball.x += ball.dx;
             ball.y += ball.dy;
 
-            if(ball.y + ballSize > canvas.height || ball.y - ballSize < 0) ball.dy = -ball.dy;
+            // Bounce on top/bottom
+            if(ball.y < 0 || ball.y > canvas.height - ballSize) ball.dy *= -1;
 
-            if(ball.x - ballSize < player.x + paddleWidth && ball.y > player.y && ball.y < player.y + paddleHeight) ball.dx = -ball.dx;
-            if(ball.x + ballSize > ai.x && ball.y > ai.y && ball.y < ai.y + paddleHeight) ball.dx = -ball.dx;
+            // Bounce on paddles
+            if(ball.x < player.x + paddleWidth && ball.y > player.y && ball.y < player.y + paddleHeight) ball.dx *= -1;
+            if(ball.x + ballSize > ai.x && ball.y > ai.y && ball.y < ai.y + paddleHeight) ball.dx *= -1;
 
-            if(ball.y < ai.y + paddleHeight/2) ai.y -= ai.dy;
-            if(ball.y > ai.y + paddleHeight/2) ai.y += ai.dy;
-            if(ai.y < 0) ai.y = 0;
-            if(ai.y + paddleHeight > canvas.height) ai.y = canvas.height - paddleHeight;
-
-            if(ball.x < 0 || ball.x > canvas.width) resetBall();
+            // Reset if out of bounds
+            if(ball.x < 0 || ball.x > canvas.width) {
+                ball.x = canvas.width/2;
+                ball.y = canvas.height/2;
+                ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+                ball.dy = 4 * (Math.random() > 0.5 ? 1 : -1);
+            }
         }
 
         function draw() {
-            drawRect(0, 0, canvas.width, canvas.height, "black");
+            ctx.clearRect(0,0,canvas.width,canvas.height);
             drawRect(player.x, player.y, paddleWidth, paddleHeight, "white");
             drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "white");
             drawCircle(ball.x, ball.y, ballSize, "white");
         }
 
-        function gameLoop() {
-            update();
+        function loop() {
+            move();
             draw();
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(loop);
         }
 
-        gameLoop();
+        loop();
     </script>
 </body>
 </html>
+
