@@ -132,3 +132,33 @@ let loop = setInterval(gameLoop, 100);
 </script>
 </body>
 </html>
+
+
+// --- Leaderboard Functions for Snake ---
+function saveScore(game, score) {
+    let scores = JSON.parse(localStorage.getItem(game) || "[]");
+    scores.push(score);
+    scores.sort((a,b) => b - a); // highest first
+    if(scores.length > 5) scores = scores.slice(0,5); // top 5
+    localStorage.setItem(game, JSON.stringify(scores));
+}
+
+function showLeaderboard(game, elementId) {
+    let scores = JSON.parse(localStorage.getItem(game) || "[]");
+    let html = "<h3>Leaderboard</h3><ol>";
+    scores.forEach(s => html += "<li>" + s + "</li>");
+    html += "</ol>";
+    document.getElementById(elementId).innerHTML = html;
+}
+
+// --- Call when Game Over ---
+function gameOver() {
+    saveScore("snake", snakeScore);
+    showLeaderboard("snake", "snakeLeaderboard");
+    alert("Game Over! Your score: " + snakeScore);
+    snakeScore = 0;
+    updateSnakeScore();
+    resetSnake(); // make sure you have a function to reset snake game
+}
+
+// Example: call gameOver() wherever your Snake code detects collision or game end
