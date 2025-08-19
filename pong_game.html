@@ -5,49 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pong Game</title>
 <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #0f0f0f; color: white; }
-    canvas { background: black; display: block; margin: 20px auto; border: 2px solid white; }
-    input, button { font-size: 16px; padding: 5px; margin: 10px; }
-    #scoreboard { font-size: 20px; margin: 10px; }
+  body { font-family: Arial; text-align: center; background: #111; color: #fff; }
+  canvas { background: #222; display: block; margin: 20px auto; }
+  #scoreBoard { font-size: 20px; margin: 10px; }
+  #startBtn, #homeBtn { font-size: 16px; padding: 8px 16px; margin: 5px; cursor: pointer; }
+  input { padding: 5px; font-size: 16px; }
 </style>
 </head>
 <body>
 <h1>Pong</h1>
 <div>
-    Name: <input type="text" id="playerName" placeholder="Enter your name">
-    <button id="startBtn">Start Game</button>
+  <input id="playerName" placeholder="Enter your name">
+  <button id="startBtn">Start Game</button>
+  <button id="homeBtn" onclick="location.href='games_hub_site.html'">Home</button>
 </div>
-<div id="scoreboard">Score: 0</div>
-<canvas id="pong" width="600" height="400"></canvas>
-<br>
-<button onclick="window.location.href='games_hub_site.html'">Home</button>
+<div id="scoreBoard">Score: 0</div>
+<canvas id="pongCanvas" width="600" height="400"></canvas>
 
 <script>
-const canvas = document.getElementById("pong");
+const canvas = document.getElementById("pongCanvas");
 const ctx = canvas.getContext("2d");
 
-let paddleWidth = 10, paddleHeight = 100, ballSize = 10;
+const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
 let player = { x: 0, y: canvas.height/2 - paddleHeight/2, dy: 0 };
 let ai = { x: canvas.width - paddleWidth, y: canvas.height/2 - paddleHeight/2, dy: 2 };
 let ball = { x: canvas.width/2, y: canvas.height/2, dx: 4, dy: 4 };
 let score = 0;
+let playerName = "";
 let gameInterval;
-let playerName = '';
 
-document.getElementById("startBtn").addEventListener("click", () => {
-    playerName = document.getElementById("playerName").value || "Player";
-    resetGame();
-    clearInterval(gameInterval);
-    gameInterval = setInterval(update, 20);
-});
-
-document.addEventListener("keydown", e => {
-    if(e.key === "ArrowUp") player.dy = -5;
-    if(e.key === "ArrowDown") player.dy = 5;
-});
-document.addEventListener("keyup", e => {
-    if(e.key === "ArrowUp" || e.key === "ArrowDown") player.dy = 0;
-});
+function resetPositions() {
+    player.y = canvas.height/2 - paddleHeight/2;
+    ai.y = canvas.height/2 - paddleHeight/2;
+    ball.x = canvas.width/2;
+    ball.y = canvas.height/2;
+    ball.dx = 4 * (Math.random() < 0.5 ? 1 : -1);
+    ball.dy = 4 * (Math.random() < 0.5 ? 1 : -1);
+}
 
 function drawRect(x, y, w, h, color) {
     ctx.fillStyle = color;
@@ -62,57 +56,67 @@ function drawCircle(x, y, r, color) {
     ctx.fill();
 }
 
-function resetBall() {
-    ball.x = canvas.width/2;
-    ball.y = canvas.height/2;
-    ball.dx = Math.random() > 0.5 ? 4 : -4;
-    ball.dy = Math.random() > 0.5 ? 4 : -4;
+function draw() {
+    ctx.fillStyle = "#222";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    drawRect(player.x, player.y, paddleWidth, paddleHeight, "lime");
+    drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "red");
+    drawCircle(ball.x, ball.y, ballSize, "white");
 }
 
 function update() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Move paddles
+    // Move player
     player.y += player.dy;
     if(player.y < 0) player.y = 0;
     if(player.y + paddleHeight > canvas.height) player.y = canvas.height - paddleHeight;
 
-    ai.y += ai.dy;
-    if(ai.y < 0 || ai.y + paddleHeight > canvas.height) ai.dy *= -1;
+    // Move AI
+    if(ball.y < ai.y + paddleHeight/2) ai.y -= ai.dy;
+    else ai.y += ai.dy;
+    if(ai.y < 0) ai.y = 0;
+    if(ai.y + paddleHeight > canvas.height) ai.y = canvas.height - paddleHeight;
 
     // Move ball
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Collisions with top/bottom
-    if(ball.y < 0 || ball.y > canvas.height - ballSize) ball.dy *= -1;
+    // Bounce top/bottom
+    if(ball.y <= 0 || ball.y >= canvas.height) ball.dy *= -1;
 
-    // Collisions with paddles
-    if(ball.x < player.x + paddleWidth && ball.y + ballSize > player.y && ball.y < player.y + paddleHeight) {
+    // Bounce on paddles
+    if(ball.x <= player.x + paddleWidth && ball.y >= player.y && ball.y <= player.y + paddleHeight) {
         ball.dx *= -1;
-        ball.x = player.x + paddleWidth; // Prevent sticking
+        score++;
     }
-    if(ball.x + ballSize > ai.x && ball.y + ballSize > ai.y && ball.y < ai.y + paddleHeight) {
+    if(ball.x + ballSize >= ai.x && ball.y >= ai.y && ball.y <= ai.y + paddleHeight) {
         ball.dx *= -1;
-        ball.x = ai.x - ballSize;
+        score--;
     }
 
-    // Score update
-    if(ball.x < 0) { // AI scores
-        score = Math.max(0, score - 1);
-        resetBall();
-    }
-    if(ball.x > canvas.width) { // Player scores
-        score += 1;
-        resetBall();
-    }
+    // Ball goes off screen
+    if(ball.x < 0 || ball.x > canvas.width) resetPositions();
 
-    drawRect(player.x, player.y, paddleWidth, paddleHeight, "white");
-    drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "white");
-    drawCircle(ball.x, ball.y, ballSize, "white");
+    document.getElementById("scoreBoard").innerText = `${playerName}'s Score: ${score}`;
 
-    document.getElementById("scoreboard").innerText = playerName + "'s Score: " + score;
+    draw();
 }
+
+document.addEventListener("keydown", e => {
+    if(e.key === "ArrowUp") player.dy = -5;
+    if(e.key === "ArrowDown") player.dy = 5;
+});
+document.addEventListener("keyup", e => {
+    if(e.key === "ArrowUp" || e.key === "ArrowDown") player.dy = 0;
+});
+
+document.getElementById("startBtn").addEventListener("click", () => {
+    playerName = document.getElementById("playerName").value || "Player";
+    score = 0;
+    resetPositions();
+    clearInterval(gameInterval);
+    gameInterval = setInterval(update, 20);
+});
 </script>
 </body>
 </html>
