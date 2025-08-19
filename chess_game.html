@@ -3,97 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chess</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+<title>Chess Game</title>
 <style>
-  body { font-family: "Georgia", serif; text-align: center; background: #f4f1ee; }
-  #board { width: 400px; margin: 20px auto; }
-  #message { font-size: 18px; color: #e74c3c; margin-top: 10px; min-height: 24px; }
-  #controls { margin-top: 20px; }
-  button { padding: 10px 20px; font-size: 16px; margin: 0 10px; cursor: pointer; }
-  select { padding: 5px; font-size: 16px; }
-  a { display: inline-block; margin-top: 20px; color: #2980b9; text-decoration: none; }
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f0ece3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+    h1 { margin-bottom: 10px; }
+    #board { 
+        display: grid;
+        grid-template-columns: repeat(8, 60px);
+        grid-template-rows: repeat(8, 60px);
+        border: 2px solid #333;
+    }
+    .square {
+        width: 60px; height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        cursor: pointer;
+    }
+    .light { background: #f9f9f9; }
+    .dark { background: #8b8b7a; }
+    #messages { margin-top: 15px; font-size: 18px; color: #d00; min-height: 24px; }
+    #home-btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 18px;
+        cursor: pointer;
+        background: #333; color: white;
+        border: none; border-radius: 5px;
+    }
 </style>
 </head>
 <body>
-
 <h1>Chess</h1>
-<div id="board"></div>
-<div id="message"></div>
 
-<div id="controls">
-  <label for="difficulty">AI Difficulty:</label>
-  <select id="difficulty">
+<select id="difficulty">
     <option value="easy">Easy</option>
     <option value="medium">Medium</option>
     <option value="hard">Hard</option>
-  </select>
-  <button onclick="restartGame()">Restart</button>
-</div>
+</select>
 
-<a href="index.html">Back to Hub</a>
+<div id="board"></div>
+<div id="messages"></div>
+<button id="home-btn">Home</button>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0-beta.2/dist/chess.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard.min.js"></script>
 <script>
-let board = null;
-let game = new Chess();
-let messageEl = document.getElementById("message");
+    // Use chess.js for logic
+    const boardContainer = document.getElementById('board');
+    const messages = document.getElementById('messages');
+    const difficulty = document.getElementById('difficulty');
+    const homeBtn = document.getElementById('home-btn');
 
-function onDragStart(source, piece, position, orientation) {
-    if (game.game_over() ||
-        (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-        (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-        return false;
-    }
-}
+    const pieceSymbols = {
+        'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+        'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+    };
 
-function onDrop(source, target) {
-    let move = game.move({ from: source, to: target, promotion: 'q' });
-    if (move === null) {
-        messageEl.textContent = "Illegal move! Try again.";
-        return 'snapback';
-    } else {
-        messageEl.textContent = "";
-        window.setTimeout(makeAIMove, 200);
-    }
-}
+    let game = new Chess();
 
-function makeAIMove() {
-    if (game.game_over()) return;
-    let moves = game.moves();
-    let difficulty = document.getElementById("difficulty").value;
-    let move = null;
-
-    if (difficulty === "easy") {
-        move = moves[Math.floor(Math.random() * moves.length)];
-    } else if (difficulty === "medium") {
-        move = moves[Math.floor(Math.random() * moves.length)]; // placeholder, can use mini-max
-    } else if (difficulty === "hard") {
-        move = moves[Math.floor(Math.random() * moves.length)]; // placeholder, advanced AI can go here
+    // Build board UI
+    function buildBoard() {
+        boardContainer.innerHTML = '';
+        const boardArray = game.board();
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const square = document.createElement('div');
+                square.classList.add('square');
+                square.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
+                square.dataset.row = row;
+                square.dataset.col = col;
+                if (boardArray[row][col]) {
+                    square.textContent = pieceSymbols[boardArray[row][col].type.toUpperCase() === boardArray[row][col].type ? boardArray[row][col].type.toUpperCase() : boardArray[row][col].type];
+                }
+                square.addEventListener('click', () => onSquareClick(row, col));
+                boardContainer.appendChild(square);
+            }
+        }
     }
 
-    game.move(move);
-    board.position(game.fen());
-}
+    let selectedSquare = null;
 
-function onSnapEnd() {
-    board.position(game.fen());
-}
+    function onSquareClick(row, col) {
+        const files = ['a','b','c','d','e','f','g','h'];
+        const square = files[col] + (8-row);
+        if (selectedSquare) {
+            const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
+            if (move === null) {
+                messages.textContent = 'Illegal move!';
+            } else {
+                messages.textContent = '';
+                selectedSquare = null;
+                buildBoard();
+                setTimeout(aiMove, 200); // AI moves after player
+            }
+        } else {
+            selectedSquare = square;
+        }
+    }
 
-function restartGame() {
-    game.reset();
-    board.start();
-    messageEl.textContent = "";
-}
+    function aiMove() {
+        if (game.game_over()) return;
+        let moves = game.moves();
+        let move;
+        const level = difficulty.value;
+        if (level === 'easy') {
+            move = moves[Math.floor(Math.random()*moves.length)];
+        } else if (level === 'medium') {
+            move = moves[Math.floor(Math.random()*moves.length)]; // placeholder simple AI
+        } else {
+            move = moves[Math.floor(Math.random()*moves.length)]; // placeholder hard AI
+        }
+        game.move(move);
+        buildBoard();
+    }
 
-board = Chessboard('board', {
-    draggable: true,
-    position: 'start',
-    onDragStart: onDragStart,
-    onDrop: onDrop,
-    onSnapEnd: onSnapEnd
-});
+    homeBtn.addEventListener('click', () => {
+        window.location.href = 'games_hub_site.html'; // Change this to your hub page
+    });
+
+    buildBoard();
 </script>
 </body>
 </html>
