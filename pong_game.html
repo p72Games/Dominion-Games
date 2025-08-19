@@ -3,165 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pong</title>
+<title>Pong Game</title>
 <style>
-    body { text-align:center; font-family: Arial, sans-serif; background: #111; color: #fff; }
-    canvas { background: black; display:block; margin:20px auto; }
-    #score { font-size: 24px; }
-    #leaderboard { margin-top: 20px; }
-    #leaderboard ol { list-style: decimal; padding-left:0; }
-    #leaderboard li { font-size: 18px; margin:5px 0; }
+    body { font-family: Arial; text-align: center; background: #111; color: #fff; }
+    canvas { background: #222; display: block; margin: 20px auto; }
+    button { font-size: 18px; padding: 10px 20px; margin: 10px; cursor: pointer; }
+    h2, #leaderboard, #gameOverMsg { margin: 10px; }
 </style>
 </head>
 <body>
 
-<h1>Pong</h1>
-<div id="score">Player: 0 | AI: 0</div>
-<canvas id="pong" width="600" height="400"></canvas>
-
-<div id="leaderboard">
-    <h2>Leaderboard</h2>
-    <ol id="highScoresList"></ol>
-</div>
+<h1>Pong Game</h1>
+<button id="startBtn">Start Game</button>
+<h2>Score: <span id="pongScore">0</span></h2>
+<canvas id="pongCanvas" width="600" height="400"></canvas>
+<div id="gameOverMsg"></div>
+<div id="pongLeaderboard"></div>
 
 <script>
-const canvas = document.getElementById("pong");
+const canvas = document.getElementById("pongCanvas");
 const ctx = canvas.getContext("2d");
 
-const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
-let player = { x:0, y:canvas.height/2 - paddleHeight/2, dy:0 };
-let ai = { x:canvas.width - paddleWidth, y:canvas.height/2 - paddleHeight/2, dy:2 };
-let ball = { x:canvas.width/2, y:canvas.height/2, dx:4, dy:4 };
+let paddleWidth = 10, paddleHeight = 100, ballSize = 10;
+let player, ai, ball, score, gameInterval;
 
-let playerScore = 0;
-let aiScore = 0;
-
-document.addEventListener("keydown", e => {
-    if(e.key === "ArrowUp") player.dy = -5;
-    if(e.key === "ArrowDown") player.dy = 5;
-});
-document.addEventListener("keyup", e => {
-    if(e.key === "ArrowUp" || e.key === "ArrowDown") player.dy = 0;
-});
-
-function drawRect(x,y,w,h,color){
-    ctx.fillStyle = color;
-    ctx.fillRect(x,y,w,h);
-}
-
-function drawCircle(x,y,r,color){
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x,y,r,0,Math.PI*2);
-    ctx.closePath();
-    ctx.fill();
-}
-
-function resetBall(){
-    ball.x = canvas.width/2;
-    ball.y = canvas.height/2;
-    ball.dx = -ball.dx;
-    ball.dy = 4 * (Math.random() > 0.5 ? 1 : -1);
-}
-
-function drawScore(){
-    document.getElementById("score").innerText = `Player: ${playerScore} | AI: ${aiScore}`;
-}
-
-function updateLeaderboard(){
-    let scores = JSON.parse(localStorage.getItem("pongHighScores")) || [];
-    scores.sort((a,b)=>b.score-a.score);
-    scores = scores.slice(0,5);
-    const list = document.getElementById("highScoresList");
-    list.innerHTML = "";
-    scores.forEach(s => {
-        const li = document.createElement("li");
-        li.innerText = `${s.name}: ${s.score}`;
-        list.appendChild(li);
-    });
-}
-
-function saveHighScore(name, score){
-    let scores = JSON.parse(localStorage.getItem("pongHighScores")) || [];
-    scores.push({name, score});
-    localStorage.setItem("pongHighScores", JSON.stringify(scores));
-    updateLeaderboard();
-}
-
-function update(){
-    // Move paddles
-    player.y += player.dy;
-    if(player.y <0) player.y=0;
-    if(player.y>canvas.height - paddleHeight) player.y = canvas.height - paddleHeight;
-
-    // Simple AI
-    if(ball.y < ai.y + paddleHeight/2) ai.y -= ai.dy;
-    else ai.y += ai.dy;
-    if(ai.y <0) ai.y=0;
-    if(ai.y>canvas.height - paddleHeight) ai.y = canvas.height - paddleHeight;
-
-    // Move ball
-    ball.x += ball.dx;
-    ball.y += ball.dy;
-
-    // Bounce top/bottom
-    if(ball.y <0 || ball.y > canvas.height) ball.dy = -ball.dy;
-
-    // Paddle collision
-    if(ball.x < player.x + paddleWidth && ball.x > player.x && ball.y > player.y && ball.y < player.y + paddleHeight) ball.dx = -ball.dx;
-    if(ball.x > ai.x - ballSize && ball.x < ai.x + paddleWidth && ball.y > ai.y && ball.y < ai.y + paddleHeight) ball.dx = -ball.dx;
-
-    // Score
-    if(ball.x <0){
-        aiScore++;
-        drawScore();
-        resetBall();
-    }
-    if(ball.x > canvas.width){
-        playerScore++;
-        drawScore();
-        resetBall();
-    }
-}
-
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawRect(player.x, player.y, paddleWidth, paddleHeight, "white");
-    drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "white");
-    drawCircle(ball.x, ball.y, ballSize, "white");
-}
-
-function gameLoop(){
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-updateLeaderboard();
-
-// Optional: prompt for name when game ends (first to 5)
-setInterval(()=>{
-    if(playerScore >= 5 || aiScore >= 5){
-        let name = prompt("Game Over! Enter your name for leaderboard:");
-        let score = playerScore >= 5 ? playerScore : aiScore;
-        saveHighScore(name || "Player", score);
-        playerScore = 0;
-        aiScore = 0;
-        drawScore();
-        resetBall();
-    }
-}, 1000);
-</script>
-</body>
-</html>
-
-// --- Leaderboard Functions for Pong ---
+// --- Leaderboard Functions ---
 function saveScore(game, score) {
     let scores = JSON.parse(localStorage.getItem(game) || "[]");
     scores.push(score);
-    scores.sort((a,b) => b - a); // highest first
-    if(scores.length > 5) scores = scores.slice(0,5); // top 5
+    scores.sort((a,b) => b - a);
+    if(scores.length > 5) scores = scores.slice(0,5);
     localStorage.setItem(game, JSON.stringify(scores));
 }
 
@@ -173,14 +44,94 @@ function showLeaderboard(game, elementId) {
     document.getElementById(elementId).innerHTML = html;
 }
 
-// --- Call when Game Over ---
-function gameOver() {
-    saveScore("pong", score);
-    showLeaderboard("pong", "pongLeaderboard");
-    alert("Game Over! Your score: " + score);
+// --- Initialize Game ---
+function initGame() {
+    player = { x: 0, y: canvas.height/2 - paddleHeight/2, dy: 0 };
+    ai = { x: canvas.width - paddleWidth, y: canvas.height/2 - paddleHeight/2, dy: 2 };
+    ball = { x: canvas.width/2, y: canvas.height/2, dx: 4, dy: 4 };
     score = 0;
-    updateScore();
-    resetBall();
+    document.getElementById("pongScore").innerText = score;
+    document.getElementById("gameOverMsg").innerText = "";
+    if(gameInterval) clearInterval(gameInterval);
+    gameInterval = setInterval(gameLoop, 20);
 }
 
-// Example: call gameOver() wherever your Pong code detects the player or AI loses
+// --- Game Loop ---
+function gameLoop() {
+    update();
+    draw();
+}
+
+// --- Update Game ---
+function update() {
+    // Player paddle movement
+    player.y += player.dy;
+    if(player.y < 0) player.y = 0;
+    if(player.y + paddleHeight > canvas.height) player.y = canvas.height - paddleHeight;
+
+    // AI paddle
+    if(ai.y + paddleHeight/2 < ball.y) ai.y += ai.dy;
+    else ai.y -= ai.dy;
+
+    // Ball movement
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+
+    // Wall collision
+    if(ball.y < 0 || ball.y + ballSize > canvas.height) ball.dy *= -1;
+
+    // Paddle collision
+    if(ball.x < player.x + paddleWidth && ball.x > player.x &&
+       ball.y + ballSize > player.y && ball.y < player.y + paddleHeight) {
+        ball.dx *= -1;
+        score++;
+        document.getElementById("pongScore").innerText = score;
+    }
+    if(ball.x + ballSize > ai.x && ball.x + ballSize < ai.x + paddleWidth &&
+       ball.y + ballSize > ai.y && ball.y < ai.y + paddleHeight) {
+        ball.dx *= -1;
+    }
+
+    // Check for Game Over
+    if(ball.x < 0 || ball.x > canvas.width) gameOver();
+}
+
+// --- Draw Game ---
+function draw() {
+    ctx.fillStyle = "#222";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#0f0";
+    ctx.fillRect(player.x, player.y, paddleWidth, paddleHeight);
+    ctx.fillRect(ai.x, ai.y, paddleWidth, paddleHeight);
+
+    ctx.fillStyle = "#f00";
+    ctx.fillRect(ball.x, ball.y, ballSize, ballSize);
+}
+
+// --- Game Over ---
+function gameOver() {
+    clearInterval(gameInterval);
+    document.getElementById("gameOverMsg").innerText = "Game Over! Press Start to play again.";
+    saveScore("pong", score);
+    showLeaderboard("pong", "pongLeaderboard");
+}
+
+// --- Controls ---
+document.addEventListener("keydown", e => {
+    if(e.key === "ArrowUp") player.dy = -5;
+    if(e.key === "ArrowDown") player.dy = 5;
+});
+document.addEventListener("keyup", e => {
+    if(e.key === "ArrowUp" || e.key === "ArrowDown") player.dy = 0;
+});
+
+// --- Start Button ---
+document.getElementById("startBtn").addEventListener("click", initGame);
+
+// Show leaderboard on page load
+showLeaderboard("pong", "pongLeaderboard");
+</script>
+
+</body>
+</html>
