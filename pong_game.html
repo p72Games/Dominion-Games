@@ -1,192 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pong - Dominion Games</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1d1f27, #3a3c4b);
-            color: #fff;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-        }
-
-        h1 { margin-top: 20px; color: #ffd700; }
-
-        canvas {
-            background: black;
-            display: block;
-            margin: 20px auto;
-            border-radius: 10px;
-        }
-
-        #score {
-            font-size: 24px;
-            margin: 10px;
-        }
-
-        #leaderboard {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        #leaderboard h2 { color: #ffd700; }
-        #leaderboard ul { list-style: none; padding: 0; }
-        #leaderboard li { margin: 5px 0; }
-
-        button {
-            margin: 10px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            background: #ffd700;
-            color: #222;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #e6c200;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pong Game</title>
+<style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #0f0f0f; color: white; }
+    canvas { background: black; display: block; margin: 20px auto; border: 2px solid white; }
+    input, button { font-size: 16px; padding: 5px; margin: 10px; }
+    #scoreboard { font-size: 20px; margin: 10px; }
+</style>
 </head>
 <body>
-    <h1>Pong</h1>
-    <div id="score">Score: 0</div>
-    <canvas id="pong" width="600" height="400"></canvas>
+<h1>Pong</h1>
+<div>
+    Name: <input type="text" id="playerName" placeholder="Enter your name">
+    <button id="startBtn">Start Game</button>
+</div>
+<div id="scoreboard">Score: 0</div>
+<canvas id="pong" width="600" height="400"></canvas>
+<br>
+<button onclick="window.location.href='games_hub_site.html'">Home</button>
 
-    <div id="leaderboard">
-        <h2>Leaderboard</h2>
-        <ul id="scoresList"></ul>
-    </div>
+<script>
+const canvas = document.getElementById("pong");
+const ctx = canvas.getContext("2d");
 
-    <button id="homeBtn">Home</button>
+let paddleWidth = 10, paddleHeight = 100, ballSize = 10;
+let player = { x: 0, y: canvas.height/2 - paddleHeight/2, dy: 0 };
+let ai = { x: canvas.width - paddleWidth, y: canvas.height/2 - paddleHeight/2, dy: 2 };
+let ball = { x: canvas.width/2, y: canvas.height/2, dx: 4, dy: 4 };
+let score = 0;
+let gameInterval;
+let playerName = '';
 
-    <script>
-        const canvas = document.getElementById("pong");
-        const ctx = canvas.getContext("2d");
+document.getElementById("startBtn").addEventListener("click", () => {
+    playerName = document.getElementById("playerName").value || "Player";
+    resetGame();
+    clearInterval(gameInterval);
+    gameInterval = setInterval(update, 20);
+});
 
-        // Paddle and ball
-        const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
-        let player = { x: 0, y: canvas.height/2 - paddleHeight/2, dy: 0 };
-        let ai = { x: canvas.width - paddleWidth, y: canvas.height/2 - paddleHeight/2, dy: 2 };
-        let ball = { x: canvas.width/2, y: canvas.height/2, dx: 4, dy: 4 };
-        let score = 0;
+document.addEventListener("keydown", e => {
+    if(e.key === "ArrowUp") player.dy = -5;
+    if(e.key === "ArrowDown") player.dy = 5;
+});
+document.addEventListener("keyup", e => {
+    if(e.key === "ArrowUp" || e.key === "ArrowDown") player.dy = 0;
+});
 
-        const scoreDisplay = document.getElementById("score");
+function drawRect(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+}
 
-        document.addEventListener("keydown", e => {
-            if(e.key === "ArrowUp") player.dy = -5;
-            if(e.key === "ArrowDown") player.dy = 5;
-        });
-        document.addEventListener("keyup", e => {
-            if(e.key === "ArrowUp" || e.key === "ArrowDown") player.dy = 0;
-        });
+function drawCircle(x, y, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.closePath();
+    ctx.fill();
+}
 
-        function drawRect(x, y, w, h, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, w, h);
-        }
+function resetBall() {
+    ball.x = canvas.width/2;
+    ball.y = canvas.height/2;
+    ball.dx = Math.random() > 0.5 ? 4 : -4;
+    ball.dy = Math.random() > 0.5 ? 4 : -4;
+}
 
-        function drawCircle(x, y, r, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI*2);
-            ctx.closePath();
-            ctx.fill();
-        }
+function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        function resetBall() {
-            ball.x = canvas.width/2;
-            ball.y = canvas.height/2;
-            ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
-            ball.dy = 4 * (Math.random() > 0.5 ? 1 : -1);
-        }
+    // Move paddles
+    player.y += player.dy;
+    if(player.y < 0) player.y = 0;
+    if(player.y + paddleHeight > canvas.height) player.y = canvas.height - paddleHeight;
 
-        function update() {
-            // Move player paddle
-            player.y += player.dy;
-            if(player.y < 0) player.y = 0;
-            if(player.y + paddleHeight > canvas.height) player.y = canvas.height - paddleHeight;
+    ai.y += ai.dy;
+    if(ai.y < 0 || ai.y + paddleHeight > canvas.height) ai.dy *= -1;
 
-            // Move AI paddle
-            if(ai.y + paddleHeight/2 < ball.y) ai.y += ai.dy;
-            else ai.y -= ai.dy;
-            if(ai.y < 0) ai.y = 0;
-            if(ai.y + paddleHeight > canvas.height) ai.y = canvas.height - paddleHeight;
+    // Move ball
+    ball.x += ball.dx;
+    ball.y += ball.dy;
 
-            // Move ball
-            ball.x += ball.dx;
-            ball.y += ball.dy;
+    // Collisions with top/bottom
+    if(ball.y < 0 || ball.y > canvas.height - ballSize) ball.dy *= -1;
 
-            // Ball collision top/bottom
-            if(ball.y < 0 || ball.y > canvas.height - ballSize) ball.dy *= -1;
+    // Collisions with paddles
+    if(ball.x < player.x + paddleWidth && ball.y + ballSize > player.y && ball.y < player.y + paddleHeight) {
+        ball.dx *= -1;
+        ball.x = player.x + paddleWidth; // Prevent sticking
+    }
+    if(ball.x + ballSize > ai.x && ball.y + ballSize > ai.y && ball.y < ai.y + paddleHeight) {
+        ball.dx *= -1;
+        ball.x = ai.x - ballSize;
+    }
 
-            // Ball collision paddles
-            if(ball.x < player.x + paddleWidth && ball.x > player.x && ball.y + ballSize > player.y && ball.y < player.y + paddleHeight) {
-                ball.dx *= -1;
-                score++;
-                scoreDisplay.innerText = `Score: ${score}`;
-            }
+    // Score update
+    if(ball.x < 0) { // AI scores
+        score = Math.max(0, score - 1);
+        resetBall();
+    }
+    if(ball.x > canvas.width) { // Player scores
+        score += 1;
+        resetBall();
+    }
 
-            if(ball.x + ballSize > ai.x && ball.x + ballSize < ai.x + paddleWidth && ball.y + ballSize > ai.y && ball.y < ai.y + paddleHeight) {
-                ball.dx *= -1;
-            }
+    drawRect(player.x, player.y, paddleWidth, paddleHeight, "white");
+    drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "white");
+    drawCircle(ball.x, ball.y, ballSize, "white");
 
-            // Missed ball
-            if(ball.x < 0 || ball.x > canvas.width) {
-                const name = prompt("Game Over! Enter your name for leaderboard:", "Player");
-                if(name) addToLeaderboard(name, score);
-                score = 0;
-                scoreDisplay.innerText = `Score: 0`;
-                resetBall();
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            drawRect(player.x, player.y, paddleWidth, paddleHeight, "white");
-            drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "white");
-            drawCircle(ball.x, ball.y, ballSize, "white");
-        }
-
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        gameLoop();
-
-        // Leaderboard
-        let leaderboard = [];
-        const scoresList = document.getElementById("scoresList");
-
-        function addToLeaderboard(name, score) {
-            leaderboard.push({name, score});
-            leaderboard.sort((a,b) => b.score - a.score);
-            if(leaderboard.length > 5) leaderboard.pop();
-            renderLeaderboard();
-        }
-
-        function renderLeaderboard() {
-            scoresList.innerHTML = "";
-            leaderboard.forEach(entry => {
-                const li = document.createElement("li");
-                li.textContent = `${entry.name} - ${entry.score}`;
-                scoresList.appendChild(li);
-            });
-        }
-
-        // Home button
-        document.getElementById("homeBtn").addEventListener("click", () => {
-            window.location.href = "index.html";
-        });
-    </script>
+    document.getElementById("scoreboard").innerText = playerName + "'s Score: " + score;
+}
+</script>
 </body>
 </html>
