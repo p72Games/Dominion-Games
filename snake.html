@@ -3,142 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake</title>
+    <title>Snake - Dominion Games</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #222; color: #fff; }
-        canvas { background: black; display: block; margin: 20px auto; border: 2px solid #fff; }
-        #scoreDisplay { font-size: 20px; margin-top: 10px; }
-        button { font-size: 16px; padding: 10px 20px; margin-top: 10px; cursor: pointer; }
-        input { padding: 5px; font-size: 16px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1d1f27, #3a3c4b);
+            color: #fff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin-top: 20px; color: #32cd32; }
+
+        canvas {
+            background: black;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        #score {
+            font-size: 24px;
+            margin: 10px;
+        }
+
+        #controls {
+            margin: 10px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #32cd32;
+            color: #222;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #28a428;
+        }
+
+        #leaderboard {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #leaderboard h2 { color: #32cd32; }
+        #leaderboard ul { list-style: none; padding: 0; }
+        #leaderboard li { margin: 5px 0; }
     </style>
 </head>
 <body>
-    <div id="startScreen">
-        <h1>Snake</h1>
-        <label for="playerName">Enter your name:</label>
-        <input type="text" id="playerName" placeholder="Your name">
-        <button onclick="startGame()">Start Game</button>
+    <h1>Snake</h1>
+    <div id="score">Score: 0</div>
+    <div id="controls">
+        <button id="startBtn">Start Game</button>
+        <button id="homeBtn">Home</button>
     </div>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
 
-    <div id="gameScreen" style="display:none;">
-        <canvas id="snake" width="400" height="400"></canvas>
-        <div id="scoreDisplay">Score: 0</div>
-        <button id="submitScoreBtn" style="display:none;" onclick="submitScore()">Submit Score</button>
+    <div id="leaderboard">
+        <h2>Leaderboard</h2>
+        <ul id="scoresList"></ul>
     </div>
 
     <script>
-        const canvas = document.getElementById("snake");
+        const canvas = document.getElementById("snakeCanvas");
         const ctx = canvas.getContext("2d");
-        const box = 20;
+
+        const grid = 20;
+        const rows = canvas.height / grid;
+        const cols = canvas.width / grid;
 
         let snake = [];
-        snake[0] = { x: 10 * box, y: 10 * box };
-
-        let food = { x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box };
-        let d;
+        let food = {};
+        let direction = null;
         let score = 0;
-        let gameLoopId;
-        let playerName = "";
+        let gameInterval = null;
 
-        document.addEventListener("keydown", direction);
-        function direction(event){
-            if(event.keyCode == 37 && d != "RIGHT") d = "LEFT";
-            else if(event.keyCode == 38 && d != "DOWN") d = "UP";
-            else if(event.keyCode == 39 && d != "LEFT") d = "RIGHT";
-            else if(event.keyCode == 40 && d != "UP") d = "DOWN";
+        const scoreDisplay = document.getElementById("score");
+        const startBtn = document.getElementById("startBtn");
+
+        const leaderboard = [];
+        const scoresList = document.getElementById("scoresList");
+
+        function initGame() {
+            snake = [{x: 10, y: 10}];
+            direction = null;
+            score = 0;
+            placeFood();
+            scoreDisplay.innerText = "Score: 0";
+            if(gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(gameLoop, 100);
         }
 
-        function draw() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function placeFood() {
+            food = {
+                x: Math.floor(Math.random() * cols),
+                y: Math.floor(Math.random() * rows)
+            };
+        }
 
-            for(let i = 0; i < snake.length; i++){
-                ctx.fillStyle = (i == 0) ? "lime" : "white";
-                ctx.fillRect(snake[i].x, snake[i].y, box, box);
-                ctx.strokeStyle = "black";
-                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+        document.addEventListener("keydown", e => {
+            switch(e.key){
+                case "ArrowUp": if(direction !== "down") direction = "up"; break;
+                case "ArrowDown": if(direction !== "up") direction = "down"; break;
+                case "ArrowLeft": if(direction !== "right") direction = "left"; break;
+                case "ArrowRight": if(direction !== "left") direction = "right"; break;
+            }
+        });
+
+        function gameLoop() {
+            const head = {...snake[0]};
+
+            if(direction === "up") head.y--;
+            else if(direction === "down") head.y++;
+            else if(direction === "left") head.x--;
+            else if(direction === "right") head.x++;
+
+            // Check collisions
+            if(head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows || snake.some(seg => seg.x === head.x && seg.y === head.y)){
+                gameOver();
+                return;
             }
 
-            ctx.fillStyle = "red";
-            ctx.fillRect(food.x, food.y, box, box);
+            snake.unshift(head);
 
-            let snakeX = snake[0].x;
-            let snakeY = snake[0].y;
-
-            if(d == "LEFT") snakeX -= box;
-            if(d == "UP") snakeY -= box;
-            if(d == "RIGHT") snakeX += box;
-            if(d == "DOWN") snakeY += box;
-
-            // eat food
-            if(snakeX == food.x && snakeY == food.y){
+            // Check food
+            if(head.x === food.x && head.y === food.y){
                 score++;
-                food = { x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box };
+                scoreDisplay.innerText = `Score: ${score}`;
+                placeFood();
             } else {
                 snake.pop();
             }
 
-            let newHead = { x: snakeX, y: snakeY };
-
-            // game over
-            if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)){
-                endGame();
-                return;
-            }
-
-            snake.unshift(newHead);
-            document.getElementById("scoreDisplay").innerText = "Score: " + score;
-        }
-
-        function collision(head, array){
-            for(let i = 0; i < array.length; i++){
-                if(head.x == array[i].x && head.y == array[i].y) return true;
-            }
-            return false;
-        }
-
-        function gameLoop() {
             draw();
-            gameLoopId = setTimeout(gameLoop, 100);
         }
 
-        function startGame() {
-            playerName = document.getElementById("playerName").value || "Player";
-            snake = [];
-            snake[0] = { x: 10 * box, y: 10 * box };
-            d = undefined;
-            score = 0;
-            food = { x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box };
-            document.getElementById("scoreDisplay").innerText = "Score: " + score;
-            document.getElementById("startScreen").style.display = "none";
-            document.getElementById("gameScreen").style.display = "block";
-            document.getElementById("submitScoreBtn").style.display = "none";
-            gameLoop();
+        function draw() {
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+
+            ctx.fillStyle = "lime";
+            snake.forEach(seg => ctx.fillRect(seg.x*grid, seg.y*grid, grid, grid));
+
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x*grid, food.y*grid, grid, grid);
         }
 
-        function endGame() {
-            clearTimeout(gameLoopId);
-            alert("Game Over! Your score: " + score);
-            document.getElementById("submitScoreBtn").style.display = "inline-block";
+        function gameOver() {
+            clearInterval(gameInterval);
+            const name = prompt("Game Over! Enter your name for leaderboard:", "Player");
+            if(name) addToLeaderboard(name, score);
         }
 
-        function submitScore() {
-            let leaderboard = JSON.parse(localStorage.getItem("snakeLeaderboard") || "[]");
-            leaderboard.push({ name: playerName, score: score });
+        function addToLeaderboard(name, score){
+            leaderboard.push({name, score});
             leaderboard.sort((a,b) => b.score - a.score);
-            localStorage.setItem("snakeLeaderboard", JSON.stringify(leaderboard));
-            displayLeaderboard();
+            if(leaderboard.length > 5) leaderboard.pop();
+            renderLeaderboard();
         }
 
-        function displayLeaderboard() {
-            let leaderboard = JSON.parse(localStorage.getItem("snakeLeaderboard") || "[]");
-            let html = "<h2>Leaderboard</h2><ol>";
-            leaderboard.slice(0,5).forEach(entry => {
-                html += `<li>${entry.name}: ${entry.score}</li>`;
+        function renderLeaderboard(){
+            scoresList.innerHTML = "";
+            leaderboard.forEach(entry => {
+                const li = document.createElement("li");
+                li.textContent = `${entry.name} - ${entry.score}`;
+                scoresList.appendChild(li);
             });
-            html += "</ol>";
-            document.getElementById("scoreDisplay").innerHTML = html;
         }
+
+        startBtn.addEventListener("click", initGame);
+        document.getElementById("homeBtn").addEventListener("click", () => {
+            window.location.href = "index.html";
+        });
     </script>
 </body>
 </html>
