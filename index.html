@@ -1,121 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dominion Games Hub</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1d1f27, #3a3c4b);
-            color: #fff;
-            margin: 0;
-        }
-
-        header {
-            text-align: center;
-            padding: 30px 20px;
-            background: rgba(0,0,0,0.5);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 2.5em;
-            color: #ffd700;
-        }
-
-        header p {
-            margin: 5px 0 0;
-            font-size: 1.1em;
-            color: #ccc;
-        }
-
-        main {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            padding: 40px 20px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .game-card {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        .game-card:hover {
-            transform: scale(1.05);
-            background: rgba(255,255,255,0.1);
-            cursor: pointer;
-        }
-
-        .game-card h2 {
-            margin: 15px 0 10px;
-            color: #ffd700;
-        }
-
-        .game-card p {
-            margin: 0 0 15px;
-            font-size: 0.95em;
-            color: #ccc;
-        }
-
-        .game-card a {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #ffd700;
-            color: #222;
-            font-weight: bold;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-
-        .game-card a:hover {
-            background: #e6c200;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #aaa;
-            font-size: 0.9em;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dominion Games Hub</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "Garamond", serif;
+    background: url('https://i.imgur.com/Uv9iL0R.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #2b1d0e;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    text-shadow: 1px 1px 2px #fff8dc;
+  }
+  header {
+    text-align: center;
+    padding: 50px 20px 20px 20px;
+  }
+  header h1 {
+    font-size: 3em;
+    color: #8b4513;
+    margin-bottom: 10px;
+  }
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 50px;
+  }
+  nav a {
+    text-decoration: none;
+    color: #5a2e0c;
+    background: rgba(255, 248, 220, 0.8);
+    padding: 20px 40px;
+    border-radius: 15px;
+    font-size: 1.5em;
+    box-shadow: 3px 3px 6px #00000033;
+    transition: all 0.3s ease;
+  }
+  nav a:hover {
+    background: rgba(255, 239, 184, 0.95);
+    transform: scale(1.05);
+    box-shadow: 5px 5px 10px #00000055;
+  }
+  footer {
+    margin-top: auto;
+    padding: 20px;
+    text-align: center;
+    font-size: 0.9em;
+    background: rgba(255, 248, 220, 0.8);
+  }
+</style>
 </head>
 <body>
-    <header>
-        <h1>Dominion Games Hub</h1>
-        <p>Play, compete, and track your scores!</p>
-    </header>
 
-    <main>
-        <div class="game-card">
-            <h2>Pong</h2>
-            <p>Classic pong game. Try to beat your own high score!</p>
-            <a href="pong_game.html">Play Pong</a>
-        </div>
+<header>
+  <h1>Dominion Games</h1>
+  <p>Step into the arena of classic and modern games, inspired by historic Geneva elegance.</p>
+</header>
 
-        <div class="game-card">
-            <h2>Snake</h2>
-            <p>Eat the food, grow the snake, and try to get onto the leaderboard!</p>
-            <a href="snake_game.html">Play Snake</a>
-        </div>
+<nav>
+  <a href="pong_game.html">Pong</a>
+  <a href="snake_game.html">Snake</a>
+  <a href="tictactoe_game.html">Tic Tac Toe</a>
+  <a href="chess_game.html">Chess</a>
+</nav>
 
-        <div class="game-card">
-            <h2>Chess</h2>
-            <p>Single or two-player chess with difficulty levels and move hints.</p>
-            <a href="chess_game.html">Play Chess</a>
-        </div>
-    </main>
+<footer>
+  &copy; 2025 Dominion Games. Crafted with a touch of history and fun.
+</footer>
 
-    <footer>
-        &copy; 2025 Dominion Games. All rights reserved.
-    </footer>
 </body>
 </html>
